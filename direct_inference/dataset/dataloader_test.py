@@ -348,7 +348,7 @@ class Compose_Select(Compose):
                 continue
             input_ = apply_transform(_transform, input_, self.map_items, self.unpack_items, self.log_stats)
         return input_
-
+from monai.transforms import EnsureTyped
 def get_loader(args):
     train_transforms = Compose(
         [
@@ -426,7 +426,7 @@ def get_loader(args):
                     clip=True,
                 ),
                 CropForegroundd(keys=["image", "label"], source_key="image"),
-                ToTensord(keys=["image", "label"]),
+                EnsureTyped(keys=["image", "label"]),
             ]
         )
     else:
@@ -451,7 +451,7 @@ def get_loader(args):
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                ToTensord(keys=["image"]),
+                EnsureTyped(keys=["image"]),
             ]
     )
     
