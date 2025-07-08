@@ -728,12 +728,20 @@ def save_organ_label(batch,save_dir,input_transform,organ_index):
 
 
 
-def invert_transform(invert_key=str, batch=None, input_transform=None):
-    # Make sure the prediction is wrapped as MetaTensor
+from monai.data.meta_tensor import MetaTensor
+from monai.transforms.utils import convert_to_tensor
+from monai.transforms import Compose, Invertd
+from monai.data import decollate_batch
+
+def invert_transform(invert_key = str, batch = None, input_transform = None):
+    batch = decollate_batch(batch)  # Ensure batch is a list of dicts
+
+    # Convert prediction data to MetaTensor to enable inverse transforms
     for b in batch:
-        pred = b[invert_key]
-        if not isinstance(pred, MetaTensor):
-            b[invert_key] = MetaTensor(convert_to_tensor(pred))
+        if invert_key in b:
+            pred = b[invert_key]
+            if not isinstance(pred, MetaTensor):
+                b[invert_key] = MetaTensor(convert_to_tensor(pred))
 
     post_transforms = Compose([
         Invertd(
@@ -744,8 +752,10 @@ def invert_transform(invert_key=str, batch=None, input_transform=None):
             to_tensor=True,
         ),
     ])
-    BATCH = [post_transforms(i) for i in decollate_batch(batch)]
+
+    BATCH = [post_transforms(i) for i in batch]
     return BATCH
+
 
 
 
