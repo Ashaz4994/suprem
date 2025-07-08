@@ -32,7 +32,10 @@ from monai.utils import (
 from monai.data import decollate_batch
 from monai.transforms import Invertd, SaveImaged
 
-
+from monai.data.meta_tensor import MetaTensor
+from monai.transforms.utils import convert_to_tensor
+from monai.data import decollate_batch
+from monai.transforms import Compose, Invertd
 NUM_CLASS = 32
 
 
@@ -723,7 +726,15 @@ def save_organ_label(batch,save_dir,input_transform,organ_index):
     
     BATCH = [post_transforms(i) for i in decollate_batch(batch)]
 
-def invert_transform(invert_key = str,batch = None, input_transform = None ):
+
+
+def invert_transform(invert_key=str, batch=None, input_transform=None):
+    # Make sure the prediction is wrapped as MetaTensor
+    for b in batch:
+        pred = b[invert_key]
+        if not isinstance(pred, MetaTensor):
+            b[invert_key] = MetaTensor(convert_to_tensor(pred))
+
     post_transforms = Compose([
         Invertd(
             keys=invert_key,
@@ -735,6 +746,7 @@ def invert_transform(invert_key = str,batch = None, input_transform = None ):
     ])
     BATCH = [post_transforms(i) for i in decollate_batch(batch)]
     return BATCH
+
 
 
 def visualize_label(batch, save_dir, input_transform):
